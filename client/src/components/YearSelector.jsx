@@ -1,0 +1,28 @@
+import { heavenlyStems } from "../utils/saJuCalculator";
+
+export default function YearSelector({ year, setYear, setYearStemIndex }) {
+  const handleYearChange = (e) => {
+    const inputYear = e.target.value;
+    setYear(inputYear);
+    const numYear = parseInt(inputYear);
+    if (numYear) {
+      // 연주 계산: (연도 - 4) % 10를 사용하여 천간을 구한 후, 해당 인덱스를 저장
+      const stem = heavenlyStems[(numYear - 4) % 10];
+      const index = heavenlyStems.indexOf(stem);
+      setYearStemIndex(index);
+    }
+  };
+
+  return (
+    <div className="mb-4">
+      <label className="block mb-1 font-medium">출생 연도 입력</label>
+      <input
+        type="number"
+        value={year}
+        onChange={handleYearChange}
+        className="p-2 border rounded w-full"
+        placeholder="연도 입력"
+      />
+    </div>
+  );
+}
