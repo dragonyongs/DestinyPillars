@@ -1,5 +1,3 @@
-import { Solar } from 'lunar-javascript';
-
 export const heavenlyStems = [
     "갑(甲)", "을(乙)", "병(丙)", "정(丁)", "무(戊)", 
     "기(己)", "경(庚)", "신(辛)", "임(壬)", "계(癸)"
@@ -26,52 +24,33 @@ export const calculateYearPillar = (year) => {
     };
 };
 
-// 월주의 계산 함수
-// 1. 입력된 양력을 lunar-javascript를 통해 음력으로 변환합니다.
-// 2. 전통적인 사주 규칙에 따라 음력 월에 따른 월지(지지)는 (lunarMonth + 1) % 12로 결정됩니다.
-// 3. 월간 천간은 연주의 천간에 따라 결정되는데, 아래 lookup table을 사용합니다.
-export const calculateMonthPillar = (year, month, day) => {
-    // 양력 → 음력 변환
-    const solar = Solar.fromYmd(year, month, day);
-    const lunar = solar.getLunar();
-    const lunarMonth = lunar.getMonth(); // 음력 월 (1 ~ 12)
+export const calculateMonthPillar = (year, month) => {
+    // 양력에서 월지(지지)는 일정하게 배정됨 (인월: 1, 묘월: 2 ...)
+    const branchIndex = (month + 1) % 12;
 
-    // 월지(지지): 전통적으로 음력 1월은 인(寅), 2월은 묘(卯), …, 11월은 자(子), 12월은 축(丑)입니다.
-    const branchIndex = (lunarMonth + 1) % 12;
-    
-    // 월간 천간 lookup table
-    // 그룹은 연주의 천간에 따라 결정되며, 갑/을는 그룹 0, 병/정 그룹 1, 무/기 그룹 2, 경/신 그룹 3, 임/계 그룹 4
-    // 각 배열의 인덱스(0~11)는 음력 월 - 1에 해당하며, 표의 값은 heavenlyStems 배열의 인덱스입니다.
-    const monthStemTable = [
-        [2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3],  // 그룹 0 (갑/을)
-        [4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5],  // 그룹 1 (병/정)
-        [6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7],  // 그룹 2 (무/기)
-        [8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9],  // 그룹 3 (경/신)
-        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1]   // 그룹 4 (임/계)
-    ];
-    // 연주의 천간 인덱스로 그룹을 결정 (0,1 → 그룹 0, 2,3 → 그룹 1, 4,5 → 그룹 2, 6,7 → 그룹 3, 8,9 → 그룹 4)
+    // 연간(年干)에 따라 월간(月干) 시작점 설정
     const yearPillar = calculateYearPillar(year);
-    const group = Math.floor(yearPillar.stemIndex / 2);
-    const stemIndex = monthStemTable[group][lunarMonth - 1];
-    
+    const yearStem = yearPillar.stemIndex;
+
+    // 월간 시작 기준 공식
+    const monthStemStart = (yearStem * 2 + 2) % 10;
+    const stemIndex = (monthStemStart + month - 1) % 10;
+
     return {
         stem: heavenlyStems[stemIndex],
-        branch: earthlyBranches[branchIndex],
-        lunarMonth: lunarMonth // 변환된 음력 월 정보
+        branch: earthlyBranches[branchIndex]
     };
 };
 
-// 일주의 계산 함수
-// 기준일: 1984년 2월 2일(갑자일)을 기준으로 하여, 두 날짜 사이의 일수를 구하고 60갑자를 순환시킵니다.
 export const calculateDayPillar = (year, month, day) => {
-    const baseDate = new Date(1984, 1, 2); // 1984년 2월 (월은 0부터 시작하므로 1)
+    const baseDate = new Date(1984, 1, 2); // 기준일: 1984년 2월 2일(갑자일)
     const targetDate = new Date(year, month - 1, day);
     const diffDays = Math.floor((targetDate - baseDate) / (1000 * 60 * 60 * 24));
-    
+
     const index = (diffDays % 60 + 60) % 60;
     const stemIndex = index % 10;
     const branchIndex = index % 12;
-    
+
     return {
         stem: heavenlyStems[stemIndex],
         branch: earthlyBranches[branchIndex],
@@ -79,48 +58,44 @@ export const calculateDayPillar = (year, month, day) => {
     };
 };
 
-// 시주의 계산 함수
-// 시(時)는 2시간 단위로 구분하며, 시지와 시천간은 일주의 천간을 기준으로 계산합니다.
 export const calculateTimePillar = (dayStemIndex, hour) => {
-    // 시지 계산: (hour + 1) / 2로 각 2시간 구간을 결정 (예: 23~1시 → 자, 1~3시 → 축, …)
     const branchIndex = Math.floor((hour + 1) / 2) % 12;
-    
-    // 시주의 천간은 아래와 같이 일주의 천간에 따른 시작값을 사용하여 결정합니다.
+
     const stemStartIndex = {
-        0: 0,  // 갑(甲) → 시천간: 갑(甲)
-        1: 2,  // 을(乙) → 시천간: 병(丙)
-        2: 4,  // 병(丙) → 시천간: 무(戊)
-        3: 6,  // 정(丁) → 시천간: 경(庚)
-        4: 8,  // 무(戊) → 시천간: 임(壬)
-        5: 0,  // 기(己) → 시천간: 갑(甲)
-        6: 2,  // 경(庚) → 시천간: 병(丙)
-        7: 4,  // 신(辛) → 시천간: 무(戊)
-        8: 6,  // 임(壬) → 시천간: 경(庚)
-        9: 8   // 계(癸) → 시천간: 임(壬)
+        0: 0,  // 갑 → 갑
+        1: 2,  // 을 → 병
+        2: 4,  // 병 → 무
+        3: 6,  // 정 → 경
+        4: 8,  // 무 → 임
+        5: 0,  // 기 → 갑
+        6: 2,  // 경 → 병
+        7: 4,  // 신 → 무
+        8: 6,  // 임 → 경
+        9: 8   // 계 → 임
     }[dayStemIndex];
-    
+
     const stemIndex = (stemStartIndex + Math.floor(branchIndex / 2)) % 10;
-    
+
     return {
         stem: heavenlyStems[stemIndex],
         branch: earthlyBranches[branchIndex]
     };
 };
 
-// 전체 사주 계산 함수 (월주의 계산 시 day를 추가로 전달)
+// 전체 사주 계산 함수
 export const calculateSaju = (year, month, day, hour) => {
     const yearPillar = calculateYearPillar(year);
-    const monthPillar = calculateMonthPillar(year, month, day);
+    const monthPillar = calculateMonthPillar(year, month);
     const dayPillar = calculateDayPillar(year, month, day);
     const timePillar = calculateTimePillar(dayPillar.stemIndex, hour);
-    
+
     console.log('사주:', {
         연주: `${yearPillar.stem}${yearPillar.branch}`,
         월주: `${monthPillar.stem}${monthPillar.branch}`,
         일주: `${dayPillar.stem}${dayPillar.branch}`,
         시주: `${timePillar.stem}${timePillar.branch}`
     });
-    
+
     return {
         year: `${yearPillar.stem}${yearPillar.branch}`,
         month: `${monthPillar.stem}${monthPillar.branch}`,
@@ -230,7 +205,7 @@ export const getHiddenStems = (branch) => hiddenStems[branch] || [];
 export const getHiddenStemsDescription = (branch) => {
     const hidden = getHiddenStems(branch);
     if (hidden.length === 0) return "지장간 없음";
-    
+
     return hidden.map(stem => {
         switch(stem) {
         case "계(癸)":
@@ -274,6 +249,8 @@ const tenGodRelations = {
     정인: ["정(丁)"]
 };
 
+
+// 십신에 대한 설명을 추가한 객체
 const tenGodDescriptions = {
     비견: "비견은 같은 천간과의 관계로, 본인의 성향을 공유하며 서로 존중하는 관계입니다. 자존감이 강하고 자신의 의견을 잘 표현하지만, 때때로 독립적인 성향이 강할 수 있습니다.",
     겁재: "겁재는 자신의 일주와 같은 성질을 가진 천간과의 관계로, 때때로 경쟁적인 성향이 나타날 수 있습니다. 직설적이고 강한 의지를 지닌 특징이 있으며, 자주 갈등을 일으킬 수 있습니다.",
@@ -298,39 +275,9 @@ export const getTenGodDescription = (tenGod) => {
     return tenGodDescriptions[tenGod] || "십신에 대한 설명 없음";
 };
 
-/* ===== 육친(六親) 계산 기능 ===== */
-// 사주의 기준은 일주(본인)이며, 나머지 기둥의 십신을 아래 매핑으로 육친 관계에 연결합니다.
-// 매핑: 비견, 겁재 → 형제, 식신, 상관 → 부모, 정재, 편재 → 배우자, 정인, 편인 → 자식
-export const calculateYukChinFromPillars = (pillars) => {
-    const baseStem = pillars.day.stem;
-    const mapping = {
-        "비견": "형제",
-        "겁재": "형제",
-        "식신": "부모",
-        "상관": "부모",
-        "정재": "배우자",
-        "편재": "배우자",
-        "정인": "자식",
-        "편인": "자식"
-    };
-    const result = {
-        본인: baseStem, // 일간(본인)
-        연주: null,
-        월주: null,
-        시주: null
-    };
-    let yearGod = calculateTenGod(baseStem, pillars.year.stem);
-    result.연주 = mapping[yearGod] ? `${mapping[yearGod]} (${yearGod})` : "해당없음";
-    let monthGod = calculateTenGod(baseStem, pillars.month.stem);
-    result.월주 = mapping[monthGod] ? `${mapping[monthGod]} (${monthGod})` : "해당없음";
-    let timeGod = calculateTenGod(baseStem, pillars.time.stem);
-    result.시주 = mapping[timeGod] ? `${mapping[timeGod]} (${timeGod})` : "해당없음";
-    
-    return result;
-};
-
 /* ===== 대운/세운 계산 ===== */
 
+// 대운 시작 나이 및 기간
 export const calculateBigLuckStartAge = (birthMonth, gender) => {
     const adjustment = gender === "남" ? 5 : -5;
     return birthMonth + adjustment;
@@ -380,10 +327,10 @@ export const getBigLuckPeriodDescription = (startAge, periodIndex) => {
             description: "결단력과 집중력이 중요한 시기. 자신의 목표를 향해 묵묵히 나아가며 성공을 거두는 시기입니다." 
         }
     ];
-    
+
     const periodStartAge = startAge + periodIndex * 10;
     const period = periods[periodIndex] || { element: "알 수 없음", description: "기운 설명 없음" };
-    
+
     return {
         startAge: periodStartAge,
         element: period.element,
@@ -391,6 +338,7 @@ export const getBigLuckPeriodDescription = (startAge, periodIndex) => {
     };
 };
 
+// 세운 리스트 (연간 운)
 export const getYearlyLuckPeriods = (startYear) => {
     const years = [];
     for (let i = 0; i < 10; i++) {
@@ -404,7 +352,7 @@ export const getYearlyLuckPeriodDescription = (year) => {
     const elements = ["목", "화", "토", "금", "수"];
     const element = elements[year % 5]; // 5개 오행을 순차적으로 반복
     let description = "";
-    
+
     switch (element) {
         case "목":
             description = "생명력과 성장, 창의성의 기운이 강한 해. 도전과 시작의 기운이 돋보입니다.";
@@ -424,7 +372,7 @@ export const getYearlyLuckPeriodDescription = (year) => {
         default:
             description = "알 수 없는 해.";
     }
-    
+
     return {
         year,
         element,
@@ -442,45 +390,19 @@ const branchRelations = {
     해: [["자(子)", "미(未)"], ["인(寅)", "술(戌)"]],
 };
 
-// 기존 getBranchRelation 함수
 export const getBranchRelation = (branch1, branch2) => {
+
     for (const [relation, pairs] of Object.entries(branchRelations)) {
-        if (pairs.some(([a, b]) =>
-        (a === branch1 && b === branch2) || (a === branch2 && b === branch1)
-        )) {
-        return relation;
+        if (pairs.some(([a, b]) => (a === branch1 && b === branch2) || (a === branch2 && b === branch1))) {
+            return relation;
         }
     }
     return null;
 };
 
-// 연-월 관계 '합'에 대한 상세 해석 함수
-export const getBranchRelationDetailed = (branch1, branch2) => {
-    const relation = getBranchRelation(branch1, branch2) || "없음";
-    let description = "";
-
-    if (relation === "합") {
-    if ((branch1 === "자(子)" && branch2 === "축(丑)") ||
-        (branch1 === "축(丑)" && branch2 === "자(子)")) {
-        description = "자(子)와 축(丑)의 합: 물의 성질과 토의 성질이 결합하여 재물운, 건강, 가정의 안정에 긍정적인 영향을 미칩니다.";
-    } else if ((branch1 === "인(寅)" && branch2 === "해(亥)") ||
-                (branch1 === "해(亥)" && branch2 === "인(寅)")) {
-        description = "인(寅)과 해(亥)의 합: 목과 수의 조화로 창의력과 감성, 사회적 관계에서의 유연함을 강화합니다.";
-    } else if ((branch1 === "진(辰)" && branch2 === "유(酉)") ||
-                (branch1 === "유(酉)" && branch2 === "진(辰)")) {
-        description = "진(辰)과 유(酉)의 합: 토와 금의 결합으로 실용성과 결단력이 보완되어 직업적 성공 및 목표 달성에 도움을 줍니다.";
-    } else {
-        description = "합 관계: 두 지지가 결합하여 상호 보완하며 전체 사주의 균형과 조화를 이루는 긍정적인 에너지를 형성합니다.";
-    }
-    } else {
-    description = "해당 관계에 대한 세부 해석은 제공되지 않습니다.";
-    }
-
-    return { relation, description };
-};
-
 /* ===== 용신 추천, 신강/신약, 오행 균형 분석, 직업 추천 ===== */
 
+// 각 요소가 부족할 때 추천되는 요신에 대한 해석
 const yongshinInterpretation = {
     목: "목이 부족하면 성장과 확장을 위한 에너지가 부족합니다. 적극적이고 창의적인 활동을 촉진하기 위해 목의 에너지를 강화하는 것이 좋습니다.",
     화: "화가 부족하면 열정과 추진력이 부족해 어려운 상황에서의 결단력이 떨어집니다. 화의 에너지를 보충하면 리더십과 활력을 키울 수 있습니다.",
@@ -492,11 +414,13 @@ const yongshinInterpretation = {
 export const recommendYongshin = (elementCounts) => {
     const elements = ["목", "화", "토", "금", "수"];
     
+    // 부족한 요소 찾기
     const minElement = elements.reduce(
         (min, el) => (elementCounts[el] < elementCounts[min] ? el : min),
         "목"
     );
-    
+
+    // 부족한 요소에 대한 해석 반환
     return {
         yongshin: minElement,
         interpretation: yongshinInterpretation[minElement]
@@ -504,9 +428,10 @@ export const recommendYongshin = (elementCounts) => {
 };
 
 export const determineStrength = (elementCounts) => {
+
     const totalElements = Object.values(elementCounts).reduce((sum, count) => sum + count, 0);
     const dayElementStrength = totalElements;
-    
+
     if (dayElementStrength >= 7) {
         return {
             strength: "신강",
@@ -525,7 +450,7 @@ export const determineStrength = (elementCounts) => {
     } else if (dayElementStrength >= 1) {
         return {
             strength: "약",
-            description: "약한 상태: 에너지가 부족하고, 소극적인 성향이 강습니다. 자아 표현이나 결단력에서 어려움을 겪을 수 있으며, 외부의 영향을 많이 받을 수 있습니다."
+            description: "약한 상태: 에너지가 부족하고, 소극적인 성향이 강합니다. 자아 표현이나 결단력에서 어려움을 겪을 수 있으며, 외부의 영향을 많이 받을 수 있습니다."
         };
     } else {
         return {
@@ -537,13 +462,13 @@ export const determineStrength = (elementCounts) => {
 
 export const analyzeElementBalance = (elementCounts) => {
     return Object.entries(elementCounts)
-        .map(([element, count]) => `${element}: ${count} `);
+        .map(([element, count]) => `${element}: ${count}`);
 };
 
 const elementJobs = {
     목: {
         직업: ["창업", "디자인", "교육"],
-        설명: "목(木)은 성장과 확장을 상징하며, 창의적이고 변화를 추구하는 성향이 강습니다.",
+        설명: "목(木)은 성장과 확장을 상징하며, 창의적이고 변화를 추구하는 성향이 강합니다.",
         적합성: "새로운 아이디어 발굴과 기획이 필요한 직군",
         필요역량: ["창의력", "계획 능력", "리더십"],
     },
@@ -579,30 +504,40 @@ export const recommendJobsBasedOnBalance = (balance) => {
         acc[key] = parseInt(value, 10);
         return acc;
     }, {});
-    
+
     const suggestions = [];
     const elements = ["목", "화", "토", "금", "수"];
-    
+
     elements.forEach((element) => {
         if (elementCountsObject[element] === 0) {
-            const jobInfo = elementJobs[element];
-            suggestions.push(
-                `⚠️ 당신은 ${element} 오행이 부족합니다.<br />\n            추천 직업: ${jobInfo.직업.join(", ")}<br />\n            설명: ${jobInfo.설명}<br />\n            적합성: ${jobInfo.적합성}<br />\n            필요 역량: ${jobInfo.필요역량.join(", ")}`
-            );
+        const jobInfo = elementJobs[element];
+        suggestions.push(
+            `⚠️ 당신은 ${element} 오행이 부족합니다.<br />
+            추천 직업: ${jobInfo.직업.join(", ")}<br />
+            설명: ${jobInfo.설명}<br />
+            적합성: ${jobInfo.적합성}<br />
+            필요 역량: ${jobInfo.필요역량.join(", ")}`
+        );
         }
     });
-    
+
     const dominantElement = elements.reduce((acc, curr) =>
         elementCountsObject[curr] > (elementCountsObject[acc] || 0) ? curr : acc
     );
-    
+
     if (elementCountsObject[dominantElement] >= 4) {
         const jobInfo = elementJobs[dominantElement];
         suggestions.push(
-            `✅ 당신은 ${dominantElement} 오행이 강합니다.<br />\n            추천 직업: ${jobInfo.직업.join(", ")}<br />\n            설명: ${jobInfo.설명}<br />\n            적합성: ${jobInfo.적합성}<br />\n            필요 역량: ${jobInfo.필요역량.join(", ")}`
+        `✅ 당신은 ${dominantElement} 오행이 강합니다.<br />
+            추천 직업: ${jobInfo.직업.join(", ")}<br />
+            설명: ${jobInfo.설명}<br />
+            적합성: ${jobInfo.적합성}<br />
+            필요 역량: ${jobInfo.필요역량.join(", ")}`
         );
     }
-    
+
+    console.log(suggestions);
+
     return suggestions.length > 0 ? suggestions.join("<br /><br />") : "균형 잡힌 상태입니다.";
 };
 
@@ -613,6 +548,7 @@ const stemToElement = {
 };
 
 export const calculateElementCounts = (saju, pillars) => {
+    // 사주에서의 지지(Branch) 오행 계산
     const elementMapping = {
         목: ['인(寅)', '묘(卯)', '진(辰)'],
         화: ['자(子)', '오(午)', '미(未)'],
@@ -620,9 +556,10 @@ export const calculateElementCounts = (saju, pillars) => {
         금: ['유(酉)', '해(亥)', '진(辰)'],
         수: ['자(子)', '해(亥)', '유(酉)']
     };
-    
+
     const elementCounts = { 목: 0, 화: 0, 토: 0, 금: 0, 수: 0 };
-    
+
+    // 사주에서 지지(Branch)를 기준으로 오행 계산
     saju.forEach(branch => {
         if (elementMapping.목.includes(branch)) elementCounts.목++;
         else if (elementMapping.화.includes(branch)) elementCounts.화++;
@@ -630,14 +567,15 @@ export const calculateElementCounts = (saju, pillars) => {
         else if (elementMapping.금.includes(branch)) elementCounts.금++;
         else if (elementMapping.수.includes(branch)) elementCounts.수++;
     });
-    
+
+    // pillars에서 천간(Stem)을 기준으로 오행 계산
     pillars.forEach(pillar => {
         const element = stemToElement[pillar.stem];
         if (element) {
             elementCounts[element] += 1;
         }
     });
-    
+
     return elementCounts;
 };
 
@@ -646,62 +584,8 @@ export const calculateElementCountsFromPillars = (pillars) => {
     pillars.forEach(pillar => {
         const element = stemToElement[pillar.stem];
         if (element) {
-            counts[element] += 1;
+        counts[element] += 1;
         }
     });
     return counts;
-};
-
-/**
- * 오행균형에 대한 해석을 반환하는 함수
- * 각 오행의 개수와 평균을 비교하여 부족, 적정, 과다를 판단하고,
- * 해당 오행의 기본 의미와 추천사항을 함께 출력합니다.
- *
- * @param {Object} elementCounts - { 목: number, 화: number, 토: number, 금: number, 수: number }
- * @returns {string} 오행균형 해석 텍스트
- */
-
-export const getElementBalanceInterpretation = (elementCounts) => {
-    const elementInterpretations = {
-        목: {
-            description: "성장과 창의력, 새로운 시작을 상징합니다.",
-            recommendation: "창의력과 성장의 에너지가 일정 부분 존재하지만, 과도한 발현은 없음."
-        },
-        화: {
-            description: "에너지와 열정, 추진력을 나타냅니다.",
-            recommendation: "열정과 에너지가 강하나, 과도하면 충동적으로 작용할 수 있습니다."
-        },
-        토: {
-            description: "안정감과 신뢰, 현실적 사고를 상징합니다.",
-            recommendation: "안정적인 에너지가 있으나, 특별히 두드러지지 않습니다."
-        },
-        금: {
-            description: "결단력, 규율, 조직력을 의미합니다.",
-            recommendation: "조직적 사고와 체계적인 판단에 필요한 기운이 부족할 수 있습니다."
-        },
-        수: {
-            description: "감성, 직관, 유연성을 나타냅니다.",
-            recommendation: "감정 조절과 직관적 사고에 필수적인 요소로 부족하여 보완이 필요합니다."
-        }
-    };
-
-    // 전체 오행 개수의 총합과 평균값을 계산합니다.
-    const totalCount = Object.values(elementCounts).reduce((sum, count) => sum + count, 0);
-    const averageCount = totalCount / 5;
-
-    let interpretationText = "";
-    for (const element in elementCounts) {
-        const count = elementCounts[element];
-        let balanceStatus = "";
-        if (count < averageCount) {
-            balanceStatus = "부족";
-        } else if (count > averageCount) {
-            balanceStatus = "과다";
-        } else {
-            balanceStatus = "적정";
-        }
-        interpretationText += `${element}(${elementInterpretations[element].description}): ${count}개 - ${balanceStatus}. ${elementInterpretations[element].recommendation}<br /><br />`;
-    }
-
-    return interpretationText;
 };

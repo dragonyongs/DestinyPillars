@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Solar } from 'lunar-javascript';
+
 import {
   calculateYearPillar,
   calculateMonthPillar,
@@ -12,7 +14,6 @@ import {
   recommendYongshin,
   determineStrength,
   analyzeElementBalance,
-  // recommendJobs,
   getStemAttributes,
   getElementDescription,
   heavenlyStems,
@@ -21,10 +22,13 @@ import {
   getPillarDescription,
   getHiddenStemsDescription,
   recommendJobsBasedOnBalance,
+  getElementBalanceInterpretation,
+  getBranchRelationDetailed,
 } from "../utils/saJuCalculator";
 
 export default function ResultViewer({ year, month, day, time, yearStemIndex, trigger }) {
   const [result, setResult] = useState(null);
+  const [lunarDateStr, setLunarDateStr] = useState("");
 
   useEffect(() => {
     if (!year || !month || !day || !time || yearStemIndex === null) {
@@ -32,6 +36,11 @@ export default function ResultViewer({ year, month, day, time, yearStemIndex, tr
     }
 
     try {
+      const solar = Solar.fromYmd(Number(year), Number(month), Number(day));
+      const lunar = solar.getLunar();
+      const lunarStr = `${lunar.getYear()}년 ${lunar.isLeapYear ? "윤" : ""}${lunar.getMonth()}월 ${lunar.getDay()}일 ${time}시`;
+      setLunarDateStr(lunarStr);
+
       const yearPillar = calculateYearPillar(Number(year));
       const monthPillar = calculateMonthPillar(Number(year), Number(month), Number(day));
       const dayPillar = calculateDayPillar(Number(year), Number(month), Number(day));
@@ -59,7 +68,6 @@ export default function ResultViewer({ year, month, day, time, yearStemIndex, tr
       const strength = determineStrength(elementCounts);
       const balance = analyzeElementBalance(elementCounts);
       const yongshin = recommendYongshin(elementCounts);
-      // const jobs = recommendJobs(yongshin.yongshin);
       const jobs = recommendJobsBasedOnBalance(balance);
       const stemAttrs = getStemAttributes(yearPillar.stem);
       const elementDesc = getElementDescription(stemAttrs.element);
@@ -67,6 +75,8 @@ export default function ResultViewer({ year, month, day, time, yearStemIndex, tr
       const yearMonthRelation = getBranchRelation(yearPillar.branch, monthPillar.branch) || "없음";
       const monthDayRelation = getBranchRelation(monthPillar.branch, dayPillar.branch) || "없음";
       const dayTimeRelation = getBranchRelation(dayPillar.branch, timePillar.branch) || "없음";
+      const interpretation = getElementBalanceInterpretation(elementCounts);
+      const { relation, description } = getBranchRelationDetailed(yearPillar.branch, monthPillar.branch);
 
       setResult({
         "연주": `${yearPillar.stem}${yearPillar.branch} (${stemAttrs.yinYang}, ${stemAttrs.element}) - ${getPillarDescription('연주', yearPillar).replace(/\n/g, '<br>')}`,
@@ -78,19 +88,20 @@ export default function ResultViewer({ year, month, day, time, yearStemIndex, tr
         "십신": `${tenGod} - ${dayStem} ${monthPillar.stem} (${tenGod}): ${tenGodExplanation}`,
         "대운": bigLuck,
         "세운": yearlyLuck,
-        "연-월 관계": yearMonthRelation,
+        "연-월 관계": `${relation} - ${description}`,
         "월-일 관계": monthDayRelation,
         "일-시 관계": dayTimeRelation,
         "용신": yongshin.interpretation,
         "신강신약": strength.description,
-        "오행균형": balance,
+        "오행균형": `${balance}<br />${interpretation}`,
         "직업추천": jobs,
       });
     } catch (error) {
       console.error('Error calculating result:', error);
       setResult(null);
     }
-  }, [year, month, day, time, yearStemIndex, trigger]);
+  }, [year, month, day , time, yearStemIndex, trigger]);
+
 
   if (!result) {
     return (
@@ -105,6 +116,7 @@ export default function ResultViewer({ year, month, day, time, yearStemIndex, tr
       <div className="shadow-lg bg-white/90 backdrop-blur p-6 rounded-xl border border-gray-200">
         <h1 className="text-3xl font-bold text-slate-800 text-center">사주 분석</h1>
         <p className="text-center text-slate-600 text-lg mt-2">{`${year}년 ${month}월 ${day}일 ${time}시`}</p>
+        {year && month && day && <p className="text-center text-slate-600 text-lg mt-2">{`음력: ${lunarDateStr}`}</p>}
       </div>
   
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -146,9 +158,7 @@ export default function ResultViewer({ year, month, day, time, yearStemIndex, tr
           return (
             <div key={key} className="p-6 bg-white/90 rounded-xl shadow-lg border border-gray-200">
               <h3 className="text-lg font-semibold text-slate-700">{key}</h3>
-              {/* 위험하게 HTML 삽입 */}
               {paragraphs}
-              {/* <p className="text-slate-600 mt-2" dangerouslySetInnerHTML={{ __html: value }} /> */}
             </div>
           );
         })}
