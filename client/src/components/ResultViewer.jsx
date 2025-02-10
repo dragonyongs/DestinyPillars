@@ -10,7 +10,7 @@ import {
   getBigLuckPeriods,
   getTenGodDescription,
   getYearlyLuckPeriods,
-  getBranchRelation,
+  // getBranchRelation,
   recommendYongshin,
   determineStrength,
   analyzeElementBalance,
@@ -24,6 +24,8 @@ import {
   recommendJobsBasedOnBalance,
   getElementBalanceInterpretation,
   getBranchRelationDetailed,
+  calculateYukChinFromPillarsDetailed,
+  // calculateYukChinFromPillars,
 } from "../utils/saJuCalculator";
 
 export default function ResultViewer({ year, month, day, time, yearStemIndex, trigger }) {
@@ -55,7 +57,14 @@ export default function ResultViewer({ year, month, day, time, yearStemIndex, tr
         timePillar.branch
       ];
 
-      const pillars = [yearPillar, monthPillar, dayPillar, timePillar];
+      const pillars = {
+        year: yearPillar,
+        month: monthPillar,
+        day: dayPillar,
+        time: timePillar
+      };
+
+      // const pillars = [yearPillar, monthPillar, dayPillar, timePillar];
       // const hidden = getHiddenStems(yearPillar.branch);
       const hiddenStemsDescription = getHiddenStemsDescription(yearPillar.branch);
       const tenGod = calculateTenGod(dayStem, monthPillar.stem);
@@ -72,11 +81,60 @@ export default function ResultViewer({ year, month, day, time, yearStemIndex, tr
       const stemAttrs = getStemAttributes(yearPillar.stem);
       const elementDesc = getElementDescription(stemAttrs.element);
 
-      const yearMonthRelation = getBranchRelation(yearPillar.branch, monthPillar.branch) || "없음";
-      const monthDayRelation = getBranchRelation(monthPillar.branch, dayPillar.branch) || "없음";
-      const dayTimeRelation = getBranchRelation(dayPillar.branch, timePillar.branch) || "없음";
+      // const yearMonthRelation = getBranchRelation(yearPillar.branch, monthPillar.branch) || "없음";
+      // const monthDayRelation = getBranchRelation(monthPillar.branch, dayPillar.branch) || "없음";
+      // const dayTimeRelation = getBranchRelation(dayPillar.branch, timePillar.branch) || "없음";
       const interpretation = getElementBalanceInterpretation(elementCounts);
       const { relation, description } = getBranchRelationDetailed(yearPillar.branch, monthPillar.branch);
+
+      // const yukChin = calculateYukChinFromPillarsDetailed(pillars);
+
+      // const yukChinOutput = `
+      // 본인: ${yukChin.본인.value} (${yukChin.본인.interpretation})<br />
+      // ${Object.entries(yukChin)
+      //   .filter(([key]) => key !== '본인') // 본인은 이미 출력했으므로 제외
+      //   .map(([key, value]) => `${key}: ${value.map(v => v.value).join(', ')}<br />${value.map(v => v.interpretation).join('<br />')}`) // 배열의 모든 요소 순회
+      //   .join('')}
+      // `;
+
+      const yukChin = calculateYukChinFromPillarsDetailed(pillars);
+
+      // 육친 관계를 그룹화하여 중복 제거
+      const groupedRelations = yukChin.관계들.reduce((acc, relation) => {
+        if (!acc[relation.value]) {
+            acc[relation.value] = [];
+        }
+        acc[relation.value].push(relation.type);
+        return acc;
+      }, {});
+
+      // 출력 문자열 생성
+      const yukChinOutput = `
+        본인: ${yukChin.본인.value} (${yukChin.본인.interpretation})<br />
+        ${Object.entries(groupedRelations)
+            .map(
+                ([relationValue, types]) => `
+                    ${types.join(', ')}: ${relationValue}<br />
+                    ${yukChin.관계들.find(rel => rel.value === relationValue).interpretation}<br />
+                `
+            )
+            .join('')}
+        <br />
+        *육친 빈도 분석:<br />
+        ${Object.entries(yukChin.분석.육친_빈도)
+            .map(([god, count]) => `${god}: ${count}개`)
+            .join(', ')}<br />
+        <br />
+        *과다 및 부족 해석:<br />
+        ${yukChin.분석.과다_부족_해석.length > 0
+            ? yukChin.분석.과다_부족_해석.join('<br />')
+            : '특이사항 없음.'}<br />
+        <br />
+        *지지 간의 합충 관계:<br />
+        ${yukChin.분석.합충_관계.length > 0
+            ? yukChin.분석.합충_관계.join('<br />')
+            : '특이사항 없음.'}
+      `;
 
       setResult({
         "연주": `${yearPillar.stem}${yearPillar.branch} (${stemAttrs.yinYang}, ${stemAttrs.element}) - ${getPillarDescription('연주', yearPillar).replace(/\n/g, '<br>')}`,
@@ -88,13 +146,14 @@ export default function ResultViewer({ year, month, day, time, yearStemIndex, tr
         "십신": `${tenGod} - ${dayStem} ${monthPillar.stem} (${tenGod}): ${tenGodExplanation}`,
         "대운": bigLuck,
         "세운": yearlyLuck,
+        "오행균형": `${balance}<br />${interpretation}`,
         "연-월 관계": `${relation} - ${description}`,
-        "월-일 관계": monthDayRelation,
-        "일-시 관계": dayTimeRelation,
+        // "월-일 관계": monthDayRelation,
+        // "일-시 관계": dayTimeRelation,
         "용신": yongshin.interpretation,
         "신강신약": strength.description,
-        "오행균형": `${balance}<br />${interpretation}`,
         "직업추천": jobs,
+        "육친(六親)": yukChinOutput,
       });
     } catch (error) {
       console.error('Error calculating result:', error);

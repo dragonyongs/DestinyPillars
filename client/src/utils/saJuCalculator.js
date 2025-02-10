@@ -11,7 +11,6 @@ export const earthlyBranches = [
     "술(戌)", "해(亥)"
 ];
 
-
 /* ===== 사주 기둥 계산 함수 ===== */
 export const calculateYearPillar = (year) => {
     const baseYear = 1984; // 1984년은 갑자년
@@ -27,9 +26,6 @@ export const calculateYearPillar = (year) => {
 };
 
 // 월주의 계산 함수
-// 1. 입력된 양력을 lunar-javascript를 통해 음력으로 변환합니다.
-// 2. 전통적인 사주 규칙에 따라 음력 월에 따른 월지(지지)는 (lunarMonth + 1) % 12로 결정됩니다.
-// 3. 월간 천간은 연주의 천간에 따라 결정되는데, 아래 lookup table을 사용합니다.
 export const calculateMonthPillar = (year, month, day) => {
     // 양력 → 음력 변환
     const solar = Solar.fromYmd(year, month, day);
@@ -40,8 +36,6 @@ export const calculateMonthPillar = (year, month, day) => {
     const branchIndex = (lunarMonth + 1) % 12;
     
     // 월간 천간 lookup table
-    // 그룹은 연주의 천간에 따라 결정되며, 갑/을는 그룹 0, 병/정 그룹 1, 무/기 그룹 2, 경/신 그룹 3, 임/계 그룹 4
-    // 각 배열의 인덱스(0~11)는 음력 월 - 1에 해당하며, 표의 값은 heavenlyStems 배열의 인덱스입니다.
     const monthStemTable = [
         [2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3],  // 그룹 0 (갑/을)
         [4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5],  // 그룹 1 (병/정)
@@ -299,32 +293,132 @@ export const getTenGodDescription = (tenGod) => {
 };
 
 /* ===== 육친(六親) 계산 기능 ===== */
-// 사주의 기준은 일주(본인)이며, 나머지 기둥의 십신을 아래 매핑으로 육친 관계에 연결합니다.
-// 매핑: 비견, 겁재 → 형제, 식신, 상관 → 부모, 정재, 편재 → 배우자, 정인, 편인 → 자식
-export const calculateYukChinFromPillars = (pillars) => {
-    const baseStem = pillars.day.stem;
-    const mapping = {
-        "비견": "형제",
-        "겁재": "형제",
-        "식신": "부모",
-        "상관": "부모",
-        "정재": "배우자",
-        "편재": "배우자",
-        "정인": "자식",
-        "편인": "자식"
+const yukChinMapping = {
+    "비견": { 
+        relationship: "형제", 
+        explanation: "비견은 자신의 기운을 공유하는 관계로, 형제자매처럼 경쟁하면서도 서로의 개성을 보완합니다. 이들은 서로의 장점을 인정하고, 협력하여 성장할 수 있는 관계입니다. 비견은 개인의 사회적 관계를 형성하는 데 중요한 역할을 하며, 서로의 발전을 도모하는 긍정적인 영향을 미칩니다."
+    },
+    "겁재": { 
+        relationship: "형제", 
+        explanation: "겁재 역시 형제와 같이 동등한 경쟁 관계를 이루며, 때로는 갈등이 있을 수 있으나 기본적으로 서로를 이해하는 관계입니다. 겁재는 경쟁을 통해 서로의 한계를 시험하고, 이를 통해 개인의 성장을 촉진하는 역할을 합니다. 이 관계는 서로의 개성과 독립성을 존중하면서도, 협력의 중요성을 강조합니다."
+    },
+    "식신": { 
+        relationship: "부모", 
+        explanation: "식신은 부모처럼 보호와 양육의 역할을 하며, 조언과 지원을 통해 안정적인 에너지를 제공합니다. 이들은 개인의 성장과 발전을 도모하며, 필요한 자원을 제공하는 역할을 합니다. 식신은 개인의 삶에 긍정적인 영향을 미치며, 안정감과 지지를 통해 개인이 자신의 목표를 추구할 수 있도록 돕습니다."
+    },
+    "상관": { 
+        relationship: "부모", 
+        explanation: "상관은 부모의 역할과 유사하게, 강한 보호 본능과 함께 때로는 주도적인 영향을 미치는 관계입니다. 상관은 개인의 선택과 행동에 큰 영향을 미치며, 때로는 압박을 가할 수 있는 존재입니다. 이 관계는 개인의 성장 과정에서 중요한 역할을 하며, 부모와의 관계가 개인의 성격 형성에 미치는 영향을 나타냅니다."
+    },
+    "정재": { 
+        relationship: "배우자", 
+        explanation: "정재는 배우자와 같이 친밀하며, 상호 보완적이고 조화로운 관계를 나타냅니다. 이들은 서로의 강점을 인정하고, 함께 성장하는 관계로, 안정적이고 신뢰할 수 있는 파트너십을 형성합니다. 정재는 개인의 감정적 안정과 행복에 기여하며, 서로의 삶에 긍정적인 영향을 미칩니다."
+    },
+    "편재": { 
+        relationship: "배우자", 
+        explanation: "편재는 배우자처럼 서로의 재능과 에너지를 보완하며, 때로는 경제적 협력이나 동반자로서 작용합니다. 이 관계는 서로의 목표를 지원하고, 함께 성장하는 데 중점을 둡니다. 편재는 개인의 삶에 실질적인 도움을 주며, 서로의 성공을 위해 협력하는 관계입니다."
+    },
+    "정인": { 
+        relationship: "자식", 
+        explanation: "정인은 자식과 같이 순수하며, 성장과 발전을 도모하는 관계를 의미합니다. 이들은 서로의 가능성을 믿고, 지원하며, 긍정적인 영향을 미치는 존재입니다. 정인은 개인의 미래에 대한 희망과 비전을 제공하며, 서로의 성장을 위해 노력하는 관계입니다."
+    },
+    "편인": { 
+        relationship: "자식", 
+        explanation: "편인은 자식처럼 보호와 지원, 그리고 새로운 시작을 도모하는 역할을 나타냅니다. 이들은 개인의 성장과 발전을 위해 필요한 자원을 제공하며, 새로운 기회를 창출하는 데 도움을 줍니다. 편인은 개인의 삶에 긍정적인 변화를 가져오는 중요한 존재입니다."
+    }   
+};
+
+// 지지 간의 합 또는 충 관계를 확인하는 함수
+const checkBranchRelation = (branch1, branch2) => {
+    const branchRelations2 = {
+        합: [
+            ["자", "축"], ["인", "해"], ["묘", "술"], ["진", "유"], ["사", "신"], ["오", "미"]
+        ],
+        충: [
+            ["자", "오"], ["축", "미"], ["인", "신"], ["묘", "유"], ["진", "술"], ["사", "해"]
+        ]
     };
+
+    for (const [b1, b2] of branchRelations2.합) {
+        if ((b1 === branch1 && b2 === branch2) || (b1 === branch2 && b2 === branch1)) {
+            return "합";
+        }
+    }
+    for (const [b1, b2] of branchRelations2.충) {
+        if ((b1 === branch1 && b2 === branch2) || (b1 === branch2 && b2 === branch1)) {
+            return "충";
+        }
+    }
+    return null;
+};
+
+  // 육친(六親) 계산 함수(세부 해석 포함)
+export const calculateYukChinFromPillarsDetailed = (pillars) => {
+    const baseStem = pillars.day.stem; // 기준은 일주의 천간
     const result = {
-        본인: baseStem, // 일간(본인)
-        연주: null,
-        월주: null,
-        시주: null
+        본인: { 
+            value: baseStem, 
+            interpretation: "일간[본인]은 자신의 기운과 기본 성향을 나타냅니다." 
+        },
+        관계들: [],
+        분석: {
+            육친_빈도: {},
+            과다_부족_해석: [],
+            합충_관계: []
+        }
     };
-    let yearGod = calculateTenGod(baseStem, pillars.year.stem);
-    result.연주 = mapping[yearGod] ? `${mapping[yearGod]} (${yearGod})` : "해당없음";
-    let monthGod = calculateTenGod(baseStem, pillars.month.stem);
-    result.월주 = mapping[monthGod] ? `${mapping[monthGod]} (${monthGod})` : "해당없음";
-    let timeGod = calculateTenGod(baseStem, pillars.time.stem);
-    result.시주 = mapping[timeGod] ? `${mapping[timeGod]} (${timeGod})` : "해당없음";
+
+    // 연주, 월주, 시주에 대해 반복적으로 계산
+    const pillarMapping = [
+        { key: "year", label: "연주" },
+        { key: "month", label: "월주" },
+        { key: "time", label: "시주" }
+    ];
+
+    pillarMapping.forEach(({ key, label }) => {
+        const stem = pillars[key].stem;
+        const branch = pillars[key].branch;
+        const god = calculateTenGod(baseStem, stem);
+        if (yukChinMapping[god]) {
+            result.관계들.push({
+                type: label,
+                value: `${yukChinMapping[god].relationship} (${god})`,
+                interpretation: yukChinMapping[god].explanation
+            });
+            // 육친 빈도 계산
+            if (result.분석.육친_빈도[god]) {
+                result.분석.육친_빈도[god]++;
+            } else {
+                result.분석.육친_빈도[god] = 1;
+            }
+        } else {
+            result.관계들.push({
+                type: label,
+                value: "해당없음",
+                interpretation: `${label}의 십신과의 관계가 명확하지 않습니다.`
+            });
+        }
+    });
+
+    // 육친 과다 및 부족 해석
+    for (const [god, count] of Object.entries(result.분석.육친_빈도)) {
+        if (count >= 3) {
+            result.분석.과다_부족_해석.push(`${god}이(가) ${count}개로 과다합니다. 이는 해당 육친의 영향력이 강하게 작용함을 의미합니다.`);
+        } else if (count <= 1) {
+            result.분석.과다_부족_해석.push(`${god}이(가) ${count}개로 부족합니다. 이는 해당 육친의 영향력이 약함을 나타냅니다.`);
+        }
+    }
+
+    // 지지 간의 합충 관계 분석
+    const branches = pillarMapping.map(({ key }) => pillars[key].branch);
+    for (let i = 0; i < branches.length; i++) {
+        for (let j = i + 1; j < branches.length; j++) {
+            const relation = checkBranchRelation(branches[i], branches[j]);
+            if (relation) {
+                result.분석.합충_관계.push(`${branches[i]}와(과) ${branches[j]}는 ${relation} 관계입니다.`);
+            }
+        }
+    }
     
     return result;
 };
@@ -612,17 +706,17 @@ const stemToElement = {
     "임(壬)": "수", "계(癸)": "수"
 };
 
+const elementMapping = {
+    목: ['인(寅)', '묘(卯)', '진(辰)'],
+    화: ['자(子)', '오(午)', '미(未)'],
+    토: ['축(丑)', '신(申)', '술(戌)'],
+    금: ['유(酉)', '해(亥)', '진(辰)'],
+    수: ['자(子)', '해(亥)', '유(酉)']
+};
+
 export const calculateElementCounts = (saju, pillars) => {
-    const elementMapping = {
-        목: ['인(寅)', '묘(卯)', '진(辰)'],
-        화: ['자(子)', '오(午)', '미(未)'],
-        토: ['축(丑)', '신(申)', '술(戌)'],
-        금: ['유(酉)', '해(亥)', '진(辰)'],
-        수: ['자(子)', '해(亥)', '유(酉)']
-    };
-    
     const elementCounts = { 목: 0, 화: 0, 토: 0, 금: 0, 수: 0 };
-    
+    // 첫 번째 파라미터 'saju'는 지지(branch)들의 배열로 가정합니다.
     saju.forEach(branch => {
         if (elementMapping.목.includes(branch)) elementCounts.목++;
         else if (elementMapping.화.includes(branch)) elementCounts.화++;
@@ -630,8 +724,9 @@ export const calculateElementCounts = (saju, pillars) => {
         else if (elementMapping.금.includes(branch)) elementCounts.금++;
         else if (elementMapping.수.includes(branch)) elementCounts.수++;
     });
-    
-    pillars.forEach(pillar => {
+
+    // pillars는 객체로 전달되므로, Object.values로 각 기둥(pillar)을 순회합니다.
+    Object.values(pillars).forEach(pillar => {
         const element = stemToElement[pillar.stem];
         if (element) {
             elementCounts[element] += 1;
@@ -643,12 +738,15 @@ export const calculateElementCounts = (saju, pillars) => {
 
 export const calculateElementCountsFromPillars = (pillars) => {
     const counts = { 목: 0, 화: 0, 토: 0, 금: 0, 수: 0 };
-    pillars.forEach(pillar => {
+
+    // pillars 객체의 값들을 순회하여 천간(stem)에 해당하는 오행을 카운트합니다.
+    Object.values(pillars).forEach(pillar => {
         const element = stemToElement[pillar.stem];
         if (element) {
-            counts[element] += 1;
+        counts[element] += 1;
         }
     });
+
     return counts;
 };
 
