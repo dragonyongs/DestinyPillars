@@ -1,14 +1,17 @@
-import { calculateDayPillar } from "../utils/saJuCalculator";
+import { calculateDayPillar } from "../utils/pillarCalculator";
 
 export default function DaySelector({ year, month, day, setDay, setDayPillar }) {
-  
   const handleDayChange = (e) => {
     const inputDay = e.target.value;
     setDay(inputDay);
     const numDay = parseInt(inputDay);
+    
     if (numDay >= 1 && numDay <= 31) {
-      const result = calculateDayPillar(year, month, numDay);
-      setDayPillar(result);
+      const { stem, branch } = calculateDayPillar(year, month, numDay);
+      
+      if (stem && branch) {
+        setDayPillar({ stem, branch }); // 객체 형태로 저장
+      }
     }
   };
 

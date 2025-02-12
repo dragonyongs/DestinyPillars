@@ -1,4 +1,4 @@
-import { calculateMonthPillar } from "../utils/saJuCalculator";
+import { calculateMonthPillar } from '../utils/pillarCalculator';
 
 export default function MonthSelector({ month, setMonth, setMonthPillar, yearStemIndex }) {
   const handleMonthChange = (e) => {

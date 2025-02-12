@@ -1,15 +1,16 @@
-import { heavenlyStems } from "../utils/saJuCalculator";
+import { heavenMapping } from '../constants/mappings';
 
 export default function YearSelector({ year, setYear, setYearStemIndex }) {
   const handleYearChange = (e) => {
     const inputYear = e.target.value;
     setYear(inputYear);
     const numYear = parseInt(inputYear);
+    
     if (numYear) {
-      // 연주 계산: (연도 - 4) % 10를 사용하여 천간을 구한 후, 해당 인덱스를 저장
-      const stem = heavenlyStems[(numYear - 4) % 10];
-      const index = heavenlyStems.indexOf(stem);
-      setYearStemIndex(index);
+      const stemIndex = (numYear - 4) % 10;
+      const stem = Object.values(heavenMapping)[stemIndex]; // 천간 값 가져오기
+
+      setYearStemIndex(stemIndex); // 인덱스를 저장
     }
   };
 
