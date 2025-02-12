@@ -10,16 +10,6 @@ export const heavenMapping = {
     "기": "己", "경": "庚", "신": "辛", "임": "壬", "계": "癸"
 }
 
-// export const heavenlyStems = [
-//     "갑(甲)", "을(乙)", "병(丙)", "정(丁)", "무(戊)",
-//     "기(己)", "경(庚)", "신(辛)", "임(壬)", "계(癸)"
-// ];
-
-// export const earthlyBranches = [
-//     "자(子)", "축(丑)", "인(寅)", "묘(卯)", "진(辰)", "사(巳)",
-//     "오(午)", "미(未)", "신(申)", "유(酉)", "술(戌)", "해(亥)"
-// ];
-
 export const stemDescriptions = {
     "癸": "계(癸): 지혜와 유연함, 물의 성질을 지니며 적응력이 뛰어남",
     "己": "기(己): 실용적이고 신중함, 토의 성질을 지니며 안정적인 성향",
@@ -58,21 +48,6 @@ export const stemAttributes = {
     "辛": { element: "금", yinYang: "음", summary: "결단력과 강인함의 시기", description: "섬세하고 신중한 성격으로, 사람들과의 관계에서 신뢰를 중요하게 생각한다. 그러나 지나치게 내성적이거나 사람들을 지나치게 의심할 수 있으며" },
     "壬": { element: "수", yinYang: "양", summary: "지혜와 유연성의 시기", description: "지혜롭고 유연한 성격으로, 변화에 잘 적응하고 문제를 해결하는 능력이 뛰어나다. 그러나 가끔 지나치게 감정적일 수 있으며" },
     "癸": { element: "수", yinYang: "음", summary: "침착함과 깊이 있는 사고의 시기", description: "차분하고 신중하며, 깊은 사고를 통해 상황을 분석하고 결정을 내린다. 때로는 지나치게 내성적이거나 스스로 갇혀 있을 수 있으며" }
-};
-
-export const branchAttributes = {
-    "子": { element: "수", description: "지혜와 학문을 나타냄" },
-    "丑": { element: "토", description: "안정과 실용성을 나타냄" },
-    "寅": { element: "목", description: "성장과 새로운 시작을 나타냄" },
-    "卯": { element: "목", description: "창의성과 조화로운 에너지를 나타냄" },
-    "辰": { element: "토", description: "변화와 전환의 시기" },
-    "巳": { element: "화", description: "에너지와 열정을 나타냄" },
-    "午": { element: "화", description: "활력과 활동성을 나타냄" },
-    "未": { element: "토", description: "실용성과 신뢰성을 나타냄" },
-    "申": { element: "금", description: "결단력과 실행력을 나타냄" },
-    "酉": { element: "금", description: "완성도와 정리의 기운" },
-    "戌": { element: "토", description: "성실함과 인내를 나타냄" },
-    "亥": { element: "수", description: "지혜와 통찰력을 나타냄" }
 };
 
 export const elementDescriptions = {
@@ -495,9 +470,220 @@ export const ageCharacteristics = {
     }
 };
 
-export const yearCharacteristics = {
-    2022: "대운 전환기로서 새로운 도전과 기회",
-    2023: "안정과 성과의 시기",
-    2024: "변화와 적응의 시기",
-    2025: "도약과 성취의 시기"
+// 천간(天干) 상세 해석
+export const stemDetailedInterpretations = {
+    '甲': {
+        nature: '강인하고 진취적인 성향',
+        personality: '리더십이 뛰어나며 목표에 대한 집념이 강해 새로운 도전에 즐거움을 느끼는 성격',
+        strengths: '결단력과 추진력이 탁월하고 창의적인 사고가 돋보인다',
+        weaknesses: '때로는 고집이 강하고 융통성이 다소 부족할 때가 있다',
+        element: '양목'
+    },
+    '乙': {
+        nature: '부드럽고 유연한 성향',
+        personality: '섬세하며 예술적 감각이 뛰어나고 타인을 배려하는 성격',
+        strengths: '적응력이 뛰어나고 대인 관계가 원활하다',
+        weaknesses: '우유부단하거나 때로는 지나치게 타협적일 때가 있다',
+        element: '음목'
+    },
+    '丙': {
+        nature: '열정적이고 낙관적인 성향',
+        personality: '활력이 넘치고 긍정적이며 타인에게 영감을 주는 성격',
+        strengths: '창의력이 뛰어나고 카리스마가 돋보인다',
+        weaknesses: '충동적이거나 감정에 따라 움직일 때가 있다',
+        element: '양화'
+        },
+    '丁': {
+        nature: '따뜻하고 친근한 성향',
+        personality: '공감 능력이 뛰어나고 감성이 풍부하며 봉사정신이 강하다',
+        strengths: '섬세한 감정 표현과 깊은 이해력을 지닌다',
+        weaknesses: '감정에 쉽게 휩쓸리거나 우울해질 때가 있다',
+        element: '음화'
+    },
+    '戊': {
+        nature: '안정적이고 신중한 성향',
+        personality: '책임감이 강하고 믿음직하며 실용적인 성격',
+        strengths: '체계적이고 논리적인 사고로 문제를 해결한다',
+        weaknesses: '변화를 꺼리며 보수적인 면모가 나타날 때가 있다',
+        element: '양토'
+    },
+    '己': {
+        nature: '신중하고 온화한 성향',
+        personality: '섬세하고 친절해 주위 사람에게 신뢰를 주며 배려심이 깊다',
+        strengths: '조직적이고 안정적이며 세심한 배려심을 겸비한다',
+        weaknesses: '때때로 우유부단하거나 지나치게 내성적으로 변할 때가 있다',
+        element: '음토'
+    },
+    '庚': {
+        nature: '단호하고 강인한 성향',
+        personality: '정의감이 뚜렷하고 직설적이며 명확한 목표를 향해 나아가는 성격',
+        strengths: '강한 결단력과 의지로 어려움을 극복한다',
+        weaknesses: '고집이 강하고 때로는 냉정하게 느껴질 때가 있다',
+        element: '양금'
+    },
+    '辛': {
+        nature: '섬세하고 정교한 성향',
+        personality: '신중하며 예리한 판단력과 뛰어난 미적 감각을 지닌 성격',
+        strengths: '세심한 관찰력과 탁월한 분석력을 보유한다',
+        weaknesses: '과도한 비판적 태도나 소심함이 문제로 작용할 때가 있다',
+        element: '음금'
+    },
+    '壬': {
+        nature: '넓고 자유로운 성향',
+        personality: '적응력이 뛰어나고 유연하며 창의적인 사고를 하는 성격',
+        strengths: '융통성이 뛰어나 다양한 상황에 빠르게 적응한다',
+        weaknesses: '불안정하거나 감정 기복이 심할 때가 있다',
+        element: '양수'
+    },
+    '癸': {
+        nature: '신비롭고 감성적인 성향',
+        personality: '섬세하고 직관적이며 내면의 깊이가 돋보이는 성격',
+        strengths: '깊은 감수성과 뛰어난 예술적 감각을 지닌다',
+        weaknesses: '감정 기복이 크거나 때때로 자기 방어적으로 변할 때가 있다',
+        element: '음수'
+    }
 };
+
+    // 지지(地支) 상세 해석
+export const branchDetailedInterpretations = {
+    '子': {
+        nature: '지혜롭고 총명한 성향',
+        personality: '학구열이 강하며 지적 호기심과 창의력이 돋보이는 성격',
+        strengths: '뛰어난 기억력과 분석력을 보유한다',
+        weaknesses: '실천력이 다소 부족할 때가 있다',
+        element: '수'
+    },
+    '丑': {
+        nature: '성실하고 근면한 성향',
+        personality: '책임감이 강해 묵묵히 자신의 일을 수행하는 성격',
+        strengths: '끈기와 인내력이 돋보인다',
+        weaknesses: '고지식하거나 융통성이 부족할 때가 있다',
+        element: '토'
+    },
+    '寅': {
+        nature: '용감하고 진취적인 성향',
+        personality: '도전정신과 정의감이 뚜렷한 성격',
+        strengths: '뛰어난 리더십과 추진력을 갖추어',
+        weaknesses: '때로는 성급하거나 공격적으로 보일 때가 있다',
+        element: '목'
+    },
+    '卯': {
+        nature: '상냥하고 부드러운 성향',
+        personality: '따뜻하고 친절하며 예술적 감각과 풍부한 감수성을 지닌 성격',
+        strengths: '조화로운 인간관계와 뛰어난 감성적 직관력을 보인다',
+        weaknesses: '우유부단하거나 때로는 의존적일 때가 있다',
+        element: '목'
+    },
+    '辰': {
+        nature: '활기차고 역동적인 성향',
+        personality: '카리스마와 자신감이 넘치며 모험심과 창의력이 돋보이는 성격',
+        strengths: '도전정신, 리더십, 강한 추진력을 갖췄다',
+        weaknesses: '자존심이 강해 때로는 독선적이거나 과신할 때가 있다',
+        element: '토'
+    },
+    '巳': {
+        nature: '신비롭고 직관적인 성향',
+        personality: '냉철한 판단력과 섬세한 감성을 지녀 미묘한 매력을 발산하는 성격',
+        strengths: '탁월한 통찰력과 분석력을 보유한다',
+        weaknesses: '내성적이며 과도한 의심과 지나친 신중함이 나타날 때가 있다',
+        element: '화'
+    },
+    '午': {
+        nature: '자유롭고 열정적인 성향',
+        personality: '활발하고 사교적이며 독립심이 강한 성격',
+        strengths: '낙천적 에너지와 활발한 추진력으로 주위를 이끈다',
+        weaknesses: '충동적이거나 때로는 과시적일 때가 있다',
+        element: '화'
+    },
+    '未': {
+        nature: '온화하고 감성적인 성향',
+        personality: '부드럽고 다정하며 예술적 감각과 배려심이 뛰어난 성격',
+        strengths: '따뜻한 인간관계와 창의적인 감성을 지닌다',
+        weaknesses: '우유부단하거나 때로는 현실 도피적일 때가 있다',
+        element: '토'
+    },
+    '申': {
+        nature: '영리하고 재치 있는 성향',
+        personality: '호기심이 많고 창의적이며 기민한 사고를 지닌 성격',
+        strengths: '문제 해결 능력과 기발한 아이디어가 돋보인다',
+        weaknesses: '계산적이거나 때로는 이기적으로 보일 때가 있다',
+        element: '금'
+    },
+    '酉': {
+        nature: '정밀하고 신중한 성향',
+        personality: '세심하고 꼼꼼하며 책임감이 강한 성격',
+        strengths: '뛰어난 조직력과 분석력, 현실적인 판단력을 갖췄다',
+        weaknesses: '완벽주의와 비판적 태도가 때때로 부담으로 작용할 때가 있다',
+        element: '금'
+    },
+    '戌': {
+        nature: '충실하고 진실된 성향',
+        personality: '공정하고 믿음직하며 타인을 위해 헌신하는 성격',
+        strengths: '강한 정의감, 충성심, 그리고 깊은 배려심을 지닌다',
+        weaknesses: '보수적이거나 때로는 지나치게 경직될 때가 있다',
+        element: '토'
+    },
+    '亥': {
+        nature: '따뜻하고 포용력 있는 성향',
+        personality: '정직하고 사교적이며 감성과 직관이 돋보이는 성격',
+        strengths: '상대방을 깊이 이해하고 배려하는 감수성을 지닌다',
+        weaknesses: '과도하게 순진하거나 우유부단할 때가 있다',
+        element: '수'
+    }
+};
+
+// 사주 기둥별 특성 해석
+export const pillarSpecificInterpretations = {
+    '연주': {
+        significance: '조상과 가문의 영향이 반영된 타고난 기본 성향',
+        impact: '개인의 근본 성격과 사회적 배경을 드러낸다',
+        focus: '가족 관계, 유산, 사회적 지위와 관련된 정보를 담는다'
+    },
+    '월주': {
+        significance: '성장기와 부모의 영향을 반영하며 학습 능력을 드러낸다',
+        impact: '교육 환경과 성장 과정의 경험을 보여준다',
+        focus: '학업 성취, 부모와의 관계, 직업적 성향에 초점을 맞춘다'
+    },
+    '일주': {
+        significance: '개인의 핵심 성격과 운명을 나타낸다',
+        impact: '자아 실현과 삶의 방향성에 영향을 미친다',
+        focus: '결혼, 사업, 건강 등 주요 생활 영역과 관련된다'
+    },
+    '시주': {
+        significance: '미래 가능성과 자손 운을 반영한다',
+        impact: '노후 및 자녀 관계에 영향을 주는 요소로 작용한다',
+        focus: '자녀 교육, 노후 생활, 만년 운에 초점을 맞춘다'
+    }
+};
+
+// export const yearCharacteristics = {
+//     2022: "대운 전환기로서 새로운 도전과 기회",
+//     2023: "안정과 성과의 시기",
+//     2024: "변화와 적응의 시기",
+//     2025: "도약과 성취의 시기"
+// };
+
+// export const heavenlyStems = [
+//     "갑(甲)", "을(乙)", "병(丙)", "정(丁)", "무(戊)",
+//     "기(己)", "경(庚)", "신(辛)", "임(壬)", "계(癸)"
+// ];
+
+// export const earthlyBranches = [
+//     "자(子)", "축(丑)", "인(寅)", "묘(卯)", "진(辰)", "사(巳)",
+//     "오(午)", "미(未)", "신(申)", "유(酉)", "술(戌)", "해(亥)"
+// ];
+
+// export const branchAttributes = {
+//     "子": { element: "수", description: "지혜와 학문을 나타냄" },
+//     "丑": { element: "토", description: "안정과 실용성을 나타냄" },
+//     "寅": { element: "목", description: "성장과 새로운 시작을 나타냄" },
+//     "卯": { element: "목", description: "창의성과 조화로운 에너지를 나타냄" },
+//     "辰": { element: "토", description: "변화와 전환의 시기" },
+//     "巳": { element: "화", description: "에너지와 열정을 나타냄" },
+//     "午": { element: "화", description: "활력과 활동성을 나타냄" },
+//     "未": { element: "토", description: "실용성과 신뢰성을 나타냄" },
+//     "申": { element: "금", description: "결단력과 실행력을 나타냄" },
+//     "酉": { element: "금", description: "완성도와 정리의 기운" },
+//     "戌": { element: "토", description: "성실함과 인내를 나타냄" },
+//     "亥": { element: "수", description: "지혜와 통찰력을 나타냄" }
+// };

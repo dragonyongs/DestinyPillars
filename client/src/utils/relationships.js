@@ -59,22 +59,98 @@ export const checkBranchRelation = (branch1, branch2) => {
     return null;
 };
 
+// export const calculateYukChinFromPillarsDetailed = (pillars) => {
+//     const baseStem = pillars.day.stem.value; // 기준은 일주의 천간
+//     const result = {
+//         본인: { 
+//             value: baseStem, 
+//             interpretation: "일간[본인]은 자신의 기운과 기본 성향을 나타냅니다." 
+//         },
+//         관계들: [],
+//         분석: {
+//             육친_빈도: {},
+//             과다_부족_해석: [],
+//             합충_관계: []
+//         }
+//     };
+
+//     // 연주, 월주, 시주에 대해 반복적으로 계산
+//     const pillarMapping = [
+//         { key: "year", label: "연주" },
+//         { key: "month", label: "월주" },
+//         { key: "time", label: "시주" }
+//     ];
+
+//     pillarMapping.forEach(({ key, label }) => {
+
+//         const stem = pillars[key].stem.value;
+//         const branch = pillars[key].branch.value;
+//         const god = calculateTenGod(baseStem, stem);
+
+//         if (!yukChinMapping[god]) {
+//             console.warn(`십신 '${god}'이(가) 육친 매핑에 없습니다.`);
+//         }
+
+//         if (yukChinMapping[god]) {
+//             result.관계들.push({
+//                 type: label,
+//                 value: `${yukChinMapping[god].relationship} (${god})`,
+//                 interpretation: yukChinMapping[god].explanation
+//             });
+//             // 육친 빈도 계산
+//             if (result.분석.육친_빈도[god]) {
+//                 result.분석.육친_빈도[god]++;
+//             } else {
+//                 result.분석.육친_빈도[god] = 1;
+//             }
+//         } else {
+//             result.관계들.push({
+//                 type: label,
+//                 value: "해당없음",
+//                 interpretation: `${label}의 십신과의 관계가 명확하지 않습니다.`
+//             });
+//         }
+//     });
+
+//     // 육친 과다 및 부족 해석
+//     for (const [god, count] of Object.entries(result.분석.육친_빈도)) {
+//         if (count >= 3) {
+//             result.분석.과다_부족_해석.push(`${god}이(가) ${count}개로 과다합니다. 이는 해당 육친의 영향력이 강하게 작용함을 의미합니다.`);
+//         } else if (count <= 1) {
+//             result.분석.과다_부족_해석.push(`${god}이(가) ${count}개로 부족합니다. 이는 해당 육친의 영향력이 약함을 나타냅니다.`);
+//         }
+//     }
+
+//     // 지지 간의 합충 관계 분석
+//     const branches = pillarMapping.map(({ key }) => pillars[key].branch.value);
+//     for (let i = 0; i < branches.length; i++) {
+//         for (let j = i + 1; j < branches.length; j++) {
+//             const relation = checkBranchRelation(branches[i], branches[j]);
+//             if (relation) {
+//                 result.분석.합충_관계.push(`${branches[i]}와(과) ${branches[j]}는 ${relation} 관계입니다.`);
+//             }
+//         }
+//     }
+    
+//     return result;
+// };
+
 export const calculateYukChinFromPillarsDetailed = (pillars) => {
-    const baseStem = pillars.day.stem.value; // 기준은 일주의 천간
+    const baseStem = pillars.day.stem.value; // 기준은 일간
     const result = {
-        본인: { 
+        self: { 
             value: baseStem, 
             interpretation: "일간[본인]은 자신의 기운과 기본 성향을 나타냅니다." 
         },
-        관계들: [],
-        분석: {
-            육친_빈도: {},
-            과다_부족_해석: [],
-            합충_관계: []
+        relations: [],
+        analysis: {
+            frequency: {},
+            excessDeficiencyInterpretations: [],
+            branchRelations: []
         }
     };
 
-    // 연주, 월주, 시주에 대해 반복적으로 계산
+    // 연주, 월주, 시주에 대해 반복
     const pillarMapping = [
         { key: "year", label: "연주" },
         { key: "month", label: "월주" },
@@ -82,7 +158,6 @@ export const calculateYukChinFromPillarsDetailed = (pillars) => {
     ];
 
     pillarMapping.forEach(({ key, label }) => {
-
         const stem = pillars[key].stem.value;
         const branch = pillars[key].branch.value;
         const god = calculateTenGod(baseStem, stem);
@@ -92,19 +167,27 @@ export const calculateYukChinFromPillarsDetailed = (pillars) => {
         }
 
         if (yukChinMapping[god]) {
-            result.관계들.push({
-                type: label,
+            const relationEntry = {
+                type: ` <br />${label}`,
                 value: `${yukChinMapping[god].relationship} (${god})`,
                 interpretation: yukChinMapping[god].explanation
-            });
-            // 육친 빈도 계산
-            if (result.분석.육친_빈도[god]) {
-                result.분석.육친_빈도[god]++;
-            } else {
-                result.분석.육친_빈도[god] = 1;
+            };
+
+            // 중복 추가 방지를 위해 동일한 값과 해석이 없을 때만 추가
+            const exists = result.relations.some(
+                (rel) =>
+                    rel.value === relationEntry.value &&
+                    rel.interpretation === relationEntry.interpretation
+            );
+
+            if (!exists) {
+                result.relations.push(relationEntry);
             }
+
+            // 육친 빈도 계산
+            result.analysis.frequency[god] = (result.analysis.frequency[god] || 0) + 1;
         } else {
-            result.관계들.push({
+            result.relations.push({
                 type: label,
                 value: "해당없음",
                 interpretation: `${label}의 십신과의 관계가 명확하지 않습니다.`
@@ -112,12 +195,16 @@ export const calculateYukChinFromPillarsDetailed = (pillars) => {
         }
     });
 
-    // 육친 과다 및 부족 해석
-    for (const [god, count] of Object.entries(result.분석.육친_빈도)) {
+    // 과다 및 부족 해석
+    for (const [god, count] of Object.entries(result.analysis.frequency)) {
         if (count >= 3) {
-            result.분석.과다_부족_해석.push(`${god}이(가) ${count}개로 과다합니다. 이는 해당 육친의 영향력이 강하게 작용함을 의미합니다.`);
+            result.analysis.excessDeficiencyInterpretations.push(
+            `${god}이(가) ${count}개로 과다합니다. 이는 해당 육친의 영향력이 강하게 작용함을 의미합니다.`
+            );
         } else if (count <= 1) {
-            result.분석.과다_부족_해석.push(`${god}이(가) ${count}개로 부족합니다. 이는 해당 육친의 영향력이 약함을 나타냅니다.`);
+            result.analysis.excessDeficiencyInterpretations.push(
+            `${god}이(가) ${count}개로 부족합니다. 이는 해당 육친의 영향력이 약함을 나타냅니다.`
+            );
         }
     }
 
@@ -127,11 +214,15 @@ export const calculateYukChinFromPillarsDetailed = (pillars) => {
         for (let j = i + 1; j < branches.length; j++) {
             const relation = checkBranchRelation(branches[i], branches[j]);
             if (relation) {
-                result.분석.합충_관계.push(`${branches[i]}와(과) ${branches[j]}는 ${relation} 관계입니다.`);
+                const branchRel = `${branches[i]}와(과) ${branches[j]}는 ${relation} 관계입니다.`;
+                // 중복 제거
+                if (!result.analysis.branchRelations.includes(branchRel)) {
+                    result.analysis.branchRelations.push(branchRel);
+                }
             }
         }
     }
-    
+
     return result;
 };
 

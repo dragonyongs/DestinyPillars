@@ -9,7 +9,8 @@ import {
   calculateTimePillar,
   getElementDescription,
   getStemAttributes,
-  getPillarDescription,
+  calculateSaju,
+  // getPillarDescription,
 } from "../utils/pillarCalculator"
 
 import {
@@ -66,6 +67,14 @@ export default function ResultViewer({ time, yearStemIndex, birth, gender }) {
       const dayStemIndex = Object.values(heavenMapping).indexOf(dayStem);
       const timePillar = calculateTimePillar(dayStemIndex, Number(hour), Number(minute));
 
+      // 새로운 상세 해석 가져오기
+      const yearDetails = yearPillar.interpretation;
+      const monthDetails = monthPillar.interpretation;
+      const dayDetails = dayPillar.interpretation;
+      const timeDetails = timePillar.interpretation;
+
+      const comprehensiveInterpretation = calculateSaju(year, month, day, minute);
+
       const saju = [
         yearPillar.branch.value,
         monthPillar.branch.value,
@@ -101,7 +110,6 @@ export default function ResultViewer({ time, yearStemIndex, birth, gender }) {
 
       const yukChin = calculateYukChinFromPillarsDetailed(pillars);
       const careerLuckResult = calculateCareerLuck(pillars, { birthYear: year, yearRangeStart: "2025", yearRangeEnd: "2028" });
-      console.log('careerLuckResult', careerLuckResult);
       const formattedCareerLuck = formatCareerLuck(careerLuckResult);
 
       function formatCareerLuck(careerLuck) {
@@ -124,34 +132,32 @@ export default function ResultViewer({ time, yearStemIndex, birth, gender }) {
         const formattedDevelopmentAreas = developmentAreas.join(", ");
       
         const yearlyAnalysisStr = Object.entries(yearlyAnalysis)
-        .map(([year, { stem, age, analysis }]) => {
-          const generalLuck = analysis.generalLuck;
-          const ageSpecificAdvice = analysis.ageSpecificAdvice;
-          const dayRelationship = analysis.dayRelationship;
-          const transitionAdvice = analysis.transitionAdvice;
-          const detailedAdvice = analysis.detailedAdvice;
-          const careerFocus = analysis.careerFocus;
-      
-          return `
-            ${year}년 (${stem}, ${age}세):<br />
-            - 일반 운세: ${generalLuck}<br />
-            - 연령별 조언: ${ageSpecificAdvice}<br />
-            - 일간 관계: ${dayRelationship}<br />
-            - 전환 조언: ${transitionAdvice}<br />
-            • 상세 조언<br />
-              - 집중해야 할 핵심 역량: ${detailedAdvice.keySkillsToFocus.join(', ')}<br />
-              - 잠재적 도전 과제: ${detailedAdvice.potentialChallenges.join(', ')}<br />
-              - 개발 영역: ${detailedAdvice.developmentAreas.join(', ')}<br />
-              - 경력 기회: ${detailedAdvice.careerOpportunities.join(', ')}<br />
-            • 경력 집중<br />
-              - 단기 목표: ${careerFocus.shortTermGoals.join(', ')}<br />
-              - 장기 목표: ${careerFocus.longTermGoals.join(', ')}<br />
-              - 주요 프로젝트: ${careerFocus.keyProjects.join(', ')}<br />
-              - 네트워킹 집중: ${careerFocus.networkingFocus.join(', ')}<br />
-          `;
-        })
-        .join("");
-
+          .map(([year, { stem, age, analysis }]) => {
+            const generalLuck = analysis.generalLuck;
+            const ageSpecificAdvice = analysis.ageSpecificAdvice;
+            const dayRelationship = analysis.dayRelationship;
+            const transitionAdvice = analysis.transitionAdvice || '전년도 데이터 없음';
+            const detailedAdvice = analysis.detailedAdvice;
+            const careerFocus = analysis.careerFocus;
+        
+            return `
+              ${year}년 (${stem}, ${age}세)<br />
+              - 일반 운세: ${generalLuck}<br />
+              - 연령별 조언: ${ageSpecificAdvice}<br />
+              - 일간 관계: ${dayRelationship}<br />
+              - 전환 조언: ${transitionAdvice}<br />
+              • 상세 조언<br />
+                - 집중해야 할 핵심 역량: ${detailedAdvice.keySkillsToFocus.join(', ')}<br />
+                - 잠재적 도전 과제: ${detailedAdvice.potentialChallenges.join(', ')}<br />
+                - 개발 영역: ${detailedAdvice.developmentAreas.join(', ')}<br />
+                - 경력 기회: ${detailedAdvice.careerOpportunities.join(', ')}<br />
+              • 경력 집중<br />
+                - 단기 목표: ${careerFocus.shortTermGoals.join(', ')}<br />
+                - 장기 목표: ${careerFocus.longTermGoals.join(', ')}<br />
+                - 주요 프로젝트: ${careerFocus.keyProjects.join(', ')}<br />
+                - 네트워킹 집중: ${careerFocus.networkingFocus.join(', ')}
+            `;
+          }).join("<br /><br />");
 
         return `
           기본 정보:<br />
@@ -166,7 +172,7 @@ export default function ResultViewer({ time, yearStemIndex, birth, gender }) {
           - 강점: ${formattedStrengths}<br />
           - 약점: ${formattedWeaknesses}<br />
           - 추천 분야: ${formattedRecommendedFields}<br />
-          - 개발 영역: ${formattedDevelopmentAreas}<br /><br />
+          - 개발 영역: ${formattedDevelopmentAreas}<br />
           연도별 분석:<br />
           ${yearlyAnalysisStr}
         `;
@@ -174,49 +180,90 @@ export default function ResultViewer({ time, yearStemIndex, birth, gender }) {
 
       
       // 육친 관계를 그룹화하여 중복 제거
-      const groupedRelations = yukChin.관계들.reduce((acc, relation) => {
+      const groupedRelations = yukChin.relations.reduce((acc, relation) => {
         if (!acc[relation.value]) {
           acc[relation.value] = [];
         }
         acc[relation.value].push(relation.type);
         return acc;
       }, {});
-
+      
       // 출력 문자열 생성
       const yukChinOutput = `
-        본인: ${yukChin.본인.value} (${yukChin.본인.interpretation})<br />
+        본인: ${yukChin.self.value} (${yukChin.self.interpretation})<br />
         ${Object.entries(groupedRelations)
           .map(([relationValue, types]) => {
-            const relationDetails = yukChin.관계들.filter(rel => rel.value === relationValue);
+            const relationDetails = [
+              ...new Set(
+                yukChin.relations
+                  .filter(rel => rel.value === relationValue)
+                  .map(rel => rel.interpretation)
+              )
+            ];
             return `
               ${types.join(', ')}: ${relationValue}<br />
-              ${relationDetails.map(rel => rel.interpretation).join('<br />')}
+              ${relationDetails.join('<br />')}
             `;
           })
           .join('')}
         <br />
         *육친 빈도 분석:<br />
-        ${Object.entries(yukChin.분석.육친_빈도)
-          .map(([god, count]) => `${god}: ${count}개`)
+        ${Object.entries(yukChin.analysis.frequency)
+          .map(([god, count]) => `${god}: ${count} 개`)
           .join(', ')}<br />
         <br />
         *과다 및 부족 해석:<br />
-        ${yukChin.분석.과다_부족_해석.length > 0
-          ? yukChin.분석.과다_부족_해석.join('<br />')
-          : '특이사항 없음.'}<br />
+        ${
+          yukChin.analysis.excessDeficiencyInterpretations.length > 0
+            ? yukChin.analysis.excessDeficiencyInterpretations.join('<br />')
+            : '특이사항 없음.'
+        }<br />
         <br />
         *지지 간의 합충 관계:<br />
-        ${yukChin.분석.합충_관계.length > 0
-          ? yukChin.분석.합충_관계.join('<br />')
+        ${yukChin.analysis.branchRelations.length > 0
+          ? yukChin.analysis.branchRelations.join('<br />')
           : '특이사항 없음.'}
       `;
 
       setResult({
-        "연주": `${yearPillar.stem.key}${yearPillar.branch.key}(${yearPillar.stem.value}${yearPillar.branch.value}) (${stemAttrs.yinYang}, ${stemAttrs.element}) - ${getPillarDescription('연주', yearPillar).replace(/\n/g, '<br>')}`,
+        "연주": `${yearPillar.stem.key}${yearPillar.branch.key}(${yearPillar.stem.value}${yearPillar.branch.value}) - 
+          (${yearDetails.pillarContext.significance} )<br />
+          성격: ${yearDetails.personality.stemPersonality}<br />
+          강점: ${yearDetails.characteristics.strengths}<br />
+          약점: ${yearDetails.characteristics.weaknesses}
+        `,
+        "월주": `${monthPillar.stem.key}${monthPillar.branch.key}(${monthPillar.stem.value}${monthPillar.branch.value}) - 
+          (${monthDetails.pillarContext.significance})<br />
+          성격: ${monthDetails.personality.stemPersonality}<br />
+          강점: ${monthDetails.characteristics.strengths}<br />
+          약점: ${monthDetails.characteristics.weaknesses}
+        `,
+        "일주": `${dayPillar.stem.key}${dayPillar.branch.key}(${dayPillar.stem.value}${dayPillar.branch.value}) - 
+          (${dayDetails.pillarContext.significance})<br />
+          성격: ${dayDetails.personality.stemPersonality}<br />
+          강점: ${dayDetails.characteristics.strengths}<br />
+          약점: ${dayDetails.characteristics.weaknesses}
+        `,
+        "시주": `${timePillar.stem.key}${timePillar.branch.key}(${timePillar.stem.value}${timePillar.branch.value}) - 
+          (${timeDetails.pillarContext.significance})<br />
+          성격: ${timeDetails.personality.stemPersonality}<br />
+          강점: ${timeDetails.characteristics.strengths}<br />
+          약점: ${timeDetails.characteristics.weaknesses}
+        `,
+        "종합 해석": `
+          성격 개요:<br />
+          ${comprehensiveInterpretation.overall.personalityOverview}<br />
+          인생 방향:<br />
+          ${comprehensiveInterpretation.overall.lifeDirection}<br />
+          추천사항:<br />
+          ${comprehensiveInterpretation.overall.recommendations}
+        `,
+
         "오행 설명": elementDesc,
-        "월주": `${monthPillar.stem.key}${monthPillar.branch.key}(${monthPillar.stem.value}${monthPillar.branch.value}) - ${getPillarDescription('월주', monthPillar)})`,
-        "일주": `${dayPillar.stem.key}${dayPillar.branch.key}(${dayPillar.stem.value}${dayPillar.branch.value}) - ${getPillarDescription('일주', dayPillar)})`,
-        "시주": `${timePillar.stem.key}${timePillar.branch.key}(${timePillar.stem.value}${timePillar.branch.value}) - ${getPillarDescription('시주', timePillar)})`,
+        // "연주": `${yearPillar.stem.key}${yearPillar.branch.key}(${yearPillar.stem.value}${yearPillar.branch.value}) (${stemAttrs.yinYang}, ${stemAttrs.element}) - ${getPillarDescription('연주', yearPillar).replace(/\n/g, '<br>')}`,
+        // "월주": `${monthPillar.stem.key}${monthPillar.branch.key}(${monthPillar.stem.value}${monthPillar.branch.value}) - ${getPillarDescription('월주', monthPillar)})`,
+        // "일주": `${dayPillar.stem.key}${dayPillar.branch.key}(${dayPillar.stem.value}${dayPillar.branch.value}) - ${getPillarDescription('일주', dayPillar)})`,
+        // "시주": `${timePillar.stem.key}${timePillar.branch.key}(${timePillar.stem.value}${timePillar.branch.value}) - ${getPillarDescription('시주', timePillar)})`,
         "지장간": hiddenStemsDescription,
         "십신": `${tenGod} - ${dayStem} ${monthPillar.stem.value} (${tenGod}): ${tenGodExplanation}`,
         "대운": bigLuck,
